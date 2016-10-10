@@ -1,0 +1,40 @@
+      在Laravel框架中使用ckeditor实现文件上传
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+      文本编辑器表单设置 
+      1 实例化一个object对象 
+        var config = new Object();
+
+      2 使用filebrowserImageUploadUrl属性实现上传 
+        config.filebrowserImageUploadUrl = './upload.php?type=img';
+        config.filebrowserImageUploadUrl = '上传图片处理地址?[文件类型]';
+
+      3 laravel中需要携带token值 
+        config.filebrowserImageUploadUrl="{{URL('admin/stu/upload')}}?_token={{csrf_token()}}";
+     
+      执行上传操作 
+        
+        ckeditor上传后需要响应一段js代码给前端 
+        $str='<script type="text/javascript">window.parent.CKEDITOR.tools.callFunction('.$fn.', \''.$fileurl.'\', \''.$message.'\');</script>';
+        exit($str);
+
+        //判断是否有上传
+        if($request->hasFile("upload")){
+            //获取上传信息
+            $file = $request->file("upload");
+            //确认上传的文件是否成功
+            if($file->isValid()){
+                //$picname = $file->getClientOriginalName(); //获取上传原文件名
+                $ext = $file->getClientOriginalExtension(); //获取上传文件名的后缀名
+                //执行移动上传文件
+                $filename = time().rand(1000,9999).".".$ext;
+                $file->move("./upload/",$filename);
+                
+            //ckeditor文本编辑 上传需要返回一个js代码
+                $str = "<script type=\"text/javascript\">
+                            window.parent.CKEDITOR.tools.callFunction(".$request->input("CKEditorFuncNum").",'".URL("/")."/upload/".$filename."', '上传成功');
+                        </script>";
+                
+                return response($str); //输出
+                exit();
+            }
+        }
